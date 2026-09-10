@@ -1,0 +1,34 @@
+scenarios:
+- id: phase1-ocr-desensitize
+  priority: 100
+  signals: [病历结构化, 结构化, 脱敏, 图转文, 识别敏感词, 处理病历, 处理文档, 批量病历, 批量文档, 批量处理, 病例, 医院名, 人名]
+  firstRead: docx-ocr
+  thenRead: [desensitize]
+  doNotUse: [extract, rule-check]
+  afterAction:
+    - 阶段一输出三个产物后，必须停下来询问用户是否继续结构化提取，不要自动进入提取。
+    - 若用户要提取，提示其上传「提取字段 excel」（单行表头，每格一个字段名）。
+  commonMistakes:
+    - 阶段一结束就自动跑提取（应先询问，并等用户上传字段 excel）。
+    - 跳过脱敏直接做结构化提取（会泄露敏感信息）。
+
+- id: phase2-extract
+  priority: 90
+  signals: [结构化提取, 提取字段, 生成表格, 填字段, 继续提取, 表头, 按表头, 提取, 批量提取, 结果表, 生成结果]
+  firstRead: extract
+  thenRead: [rule-check]
+  beforeAction:
+    - 确认已有"已脱敏文本"（阶段一产出或用户上传），否则先提示用户走阶段一。
+    - 需要用户提供"提取字段 excel"（单行表头，每格一个字段名）。
+
+- id: ocr-only
+  priority: 80
+  signals: [只看图转文, OCR, mineru, markdown, 转文字]
+  firstRead: docx-ocr
+  doNotUse: [desensitize, extract, rule-check]
+
+- id: desensitize-only
+  priority: 80
+  signals: [脱敏, 敏感词, 掩码, 去标识, 医院名, 人名, 姓名]
+  firstRead: desensitize
+  doNotUse: [extract, rule-check]
